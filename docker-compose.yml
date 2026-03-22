@@ -76,7 +76,9 @@ services:
   api-gateway:
     build: ./backend/api-gateway
     ports:
-      - "8080:8080"
+      # С хоста: localhost:${GATEWAY_PUBLISH_PORT:-18080} → внутри сети по-прежнему api-gateway:8080
+      # (8080 на хосте часто занят другим приложением)
+      - "${GATEWAY_PUBLISH_PORT:-18080}:8080"
     depends_on:
       postgres:
         condition: service_healthy

@@ -2,6 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// Совпадает с GATEWAY_PUBLISH_PORT по умолчанию в docker-compose (прокси /api при npm run dev)
+const apiGatewayProxyTarget =
+  process.env.API_GATEWAY_PROXY || 'http://localhost:18080'
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -19,7 +23,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: apiGatewayProxyTarget,
         changeOrigin: true,
       },
     },
