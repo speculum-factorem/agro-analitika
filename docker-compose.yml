@@ -12,7 +12,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      # С хоста: localhost:${POSTGRES_PUBLISH_PORT:-5433} → внутри сети compose всё ещё postgres:5432
+      # (5432 на хосте часто занят локальным PostgreSQL — Bind for :::5432 failed)
+      - "${POSTGRES_PUBLISH_PORT:-5433}:5432"
     healthcheck:
       # Образ postgres при POSTGRES_USER не создаёт роль postgres — pg_isready -U postgres падает и весь стек не стартует
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d postgres || exit 1"]
