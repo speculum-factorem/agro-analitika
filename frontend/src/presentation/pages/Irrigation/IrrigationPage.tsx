@@ -43,7 +43,13 @@ const IrrigationPage: React.FC = () => {
 
   useEffect(() => {
     fields.forEach(f => {
-      dispatch(fetchIrrigationRecommendations(f.id))
+      dispatch(
+        fetchIrrigationRecommendations({
+          fieldId: f.id,
+          cropType: f.cropType,
+          currentMoisture: f.currentMoistureLevel,
+        }),
+      )
       dispatch(fetchIrrigationSchedule({
         fieldId: f.id,
         cropType: f.cropType,

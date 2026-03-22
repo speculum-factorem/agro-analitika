@@ -21,11 +21,18 @@ const initialState: IrrigationState = {
   error: null,
 }
 
+export type FetchIrrigationRecommendationsArg =
+  | string
+  | { fieldId: string; cropType?: string; currentMoisture?: number }
+
 export const fetchIrrigationRecommendations = createAsyncThunk(
   'irrigation/fetchRecommendations',
-  async (fieldId: string, { rejectWithValue }) => {
+  async (arg: FetchIrrigationRecommendationsArg, { rejectWithValue }) => {
+    const fieldId = typeof arg === 'string' ? arg : arg.fieldId
+    const options =
+      typeof arg === 'string' ? undefined : { cropType: arg.cropType, currentMoisture: arg.currentMoisture }
     try {
-      const data = await analyticsApi.getIrrigationRecommendations(fieldId)
+      const data = await analyticsApi.getIrrigationRecommendations(fieldId, options)
       return { fieldId, data }
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Ошибка загрузки рекомендаций')

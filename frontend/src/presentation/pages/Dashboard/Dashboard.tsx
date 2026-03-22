@@ -39,7 +39,13 @@ const Dashboard: React.FC = () => {
       fields.forEach(f => {
         dispatch(fetchWeatherSummary(f.id))
         dispatch(fetchYieldForecastsByField(f.id))
-        dispatch(fetchIrrigationRecommendations(f.id))
+        dispatch(
+          fetchIrrigationRecommendations({
+            fieldId: f.id,
+            cropType: f.cropType,
+            currentMoisture: f.currentMoistureLevel,
+          }),
+        )
       })
     }
   }, [fields, dispatch])

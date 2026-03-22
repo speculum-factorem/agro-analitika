@@ -34,8 +34,19 @@ export const analyticsApi = {
     }))
   },
 
-  async getIrrigationRecommendations(fieldId: string): Promise<IrrigationRecommendation[]> {
-    const { data } = await apiClient.get<IrrigationRecommendation[]>(`/analytics/irrigation/recommendations/${fieldId}`)
+  async getIrrigationRecommendations(
+    fieldId: string,
+    options?: { cropType?: string; currentMoisture?: number },
+  ): Promise<IrrigationRecommendation[]> {
+    const params = new URLSearchParams()
+    if (options?.cropType) params.set('crop_type', options.cropType)
+    if (options?.currentMoisture != null && options.currentMoisture > 0) {
+      params.set('current_moisture', String(options.currentMoisture))
+    }
+    const query = params.toString() ? `?${params.toString()}` : ''
+    const { data } = await apiClient.get<IrrigationRecommendation[]>(
+      `/analytics/irrigation/recommendations/${fieldId}${query}`,
+    )
     // Normalize priority and status to lowercase to handle backend casing differences (e.g. "High" -> "high")
     return data.map(r => ({
       ...r,

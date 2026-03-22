@@ -959,6 +959,31 @@ def _resolve_field_context(field_id: str, fallback_crop: str = "wheat", fallback
     }
 
 
+def _resolve_irrigation_moisture(current_moisture_param: Optional[float], context: dict) -> float:
+    """Soil moisture % for irrigation rules.
+
+    If the client passes a positive value, use it. Otherwise combine field-service
+    storage with Open-Meteo (minimum of available sources) so dry spots from weather
+    are not masked by a stale default moisture level.
+    """
+    if current_moisture_param is not None and current_moisture_param > 0:
+        return float(current_moisture_param)
+
+    weather = context.get("weather")
+    w_moist = weather.soil_moisture if weather else None
+    field_m = context.get("currentMoistureLevel")
+    field_moist = float(field_m) if field_m is not None else None
+
+    candidates: List[float] = []
+    if field_moist is not None and field_moist > 0:
+        candidates.append(field_moist)
+    if w_moist is not None and w_moist > 0:
+        candidates.append(float(w_moist))
+    if candidates:
+        return min(candidates)
+    return 58.0
+
+
 def _update_field_moisture(field_id: str, soil_moisture: float):
     field = _fetch_field_info(field_id)
     if not field:
@@ -1462,16 +1487,14 @@ def get_historical_yield(field_id: str, crop_type: str = "wheat"):
 def get_irrigation_recommendations(
     field_id: str,
     crop_type: str = "wheat",
-    current_moisture: float = 60.0,
+    current_moisture: Optional[float] = None,
     field_name: str = "",
     area: float = 50.0,
 ):
     """Get irrigation recommendations for a field"""
     context = _resolve_field_context(field_id, fallback_crop=crop_type, fallback_area=area)
     weather = context["weather"] or WeatherInput()
-    moisture = current_moisture if current_moisture > 0 else context["currentMoistureLevel"]
-    if moisture <= 0:
-        moisture = weather.soil_moisture
+    moisture = _resolve_irrigation_moisture(current_moisture, context)
 
     recs = irrigation_model.recommend(
         field_id=field_id,
@@ -1487,7 +1510,7 @@ def get_irrigation_recommendations(
 
 
 @app.get("/irrigation/schedule/{field_id}")
-def get_irrigation_schedule(field_id: str, crop_type: str = "wheat", current_moisture: float = 60.0):
+def get_irrigation_schedule(field_id: str, crop_type: str = "wheat", current_moisture: Optional[float] = None):
     """Get irrigation schedule for a field"""
     recs = get_irrigation_recommendations(field_id, crop_type, current_moisture)
     return {
