@@ -1,3 +1,6 @@
+# Порты на хосте задаются через .env (см. .env.example), чтобы не пересекаться с локальными
+# PostgreSQL, Kafka, Prometheus, Grafana, веб-серверами и т.д.
+
 services:
   # ===================== INFRASTRUCTURE =====================
 
@@ -65,7 +68,8 @@ services:
     depends_on:
       - kafka
     ports:
-      - "8090:8080"
+      # 8090 на хосте часто занят; UI: http://localhost:${KAFKA_UI_PUBLISH_PORT:-18090}
+      - "${KAFKA_UI_PUBLISH_PORT:-18090}:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -107,7 +111,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:?POSTGRES_USER is required}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:13000}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?BOOTSTRAP_ADMIN_PASSWORD is required}
       BOOTSTRAP_AGRONOMIST_PASSWORD: ${BOOTSTRAP_AGRONOMIST_PASSWORD:?BOOTSTRAP_AGRONOMIST_PASSWORD is required}
       BOOTSTRAP_INVITE_CODE: ${BOOTSTRAP_INVITE_CODE:-ORG1-INVITE-2026}
@@ -255,7 +259,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       NOTIFICATION_EMAIL_ENABLED: ${NOTIFICATION_EMAIL_ENABLED:-false}
       NOTIFICATION_EMAIL_TO: ${NOTIFICATION_EMAIL_TO:-}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:13000}
       INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?INTERNAL_API_TOKEN is required}
     healthcheck:
       test: ["CMD-SHELL", "curl -sf --max-time 5 http://127.0.0.1:8085/actuator/health >/dev/null || exit 1"]
@@ -276,7 +280,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PUBLISH_PORT:-19090}:9090"
     depends_on:
       - api-gateway
     restart: unless-stopped
@@ -288,13 +292,13 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_SERVER_HTTP_PORT: 3001
-      GF_SERVER_ROOT_URL: http://localhost:3001
+      GF_SERVER_ROOT_URL: http://localhost:${GRAFANA_PUBLISH_PORT:-13001}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     ports:
-      - "3001:3001"
+      - "${GRAFANA_PUBLISH_PORT:-13001}:3001"
     depends_on:
       - prometheus
     restart: unless-stopped
@@ -304,8 +308,8 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
-      - "3000:80"
+      # Один проброс: 80/3000 на хосте часто заняты (nginx, другие dev-серверы)
+      - "${FRONTEND_PUBLISH_PORT:-13000}:80"
     depends_on:
       - api-gateway
     restart: unless-stopped
