@@ -44,6 +44,10 @@ management:
 jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000
+
+# Демо по умолчанию: без писем при регистрации и без кода на вход. Включить: REQUIRE_EMAIL_VERIFICATION=true в окружении.
+REQUIRE_EMAIL_VERIFICATION: false
+
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   bootstrap:
@@ -69,8 +73,6 @@ app:
       window-seconds: ${REGISTER_RATE_LIMIT_WINDOW_SECONDS:900}
     # true — invite одноразовый; false (по умолчанию) — один код для многих регистраций (демо)
     invite-single-use: ${INVITE_SINGLE_USE:false}
-    # false — без писем: регистрация сразу с JWT, вход только по паролю, refresh без email_verified
-    require-email-verification: ${REQUIRE_EMAIL_VERIFICATION:false}
 ---
 spring:
   config:

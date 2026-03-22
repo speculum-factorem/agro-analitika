@@ -88,12 +88,17 @@ public class AuthService {
     /** false = один и тот же invite можно использовать многократно (удобно для демо/VPS). */
     @Value("${app.auth.invite-single-use:false}")
     private boolean inviteSingleUse;
-    @Value("${app.auth.require-email-verification:false}")
+    /**
+     * Только env {@code REQUIRE_EMAIL_VERIFICATION} — не {@code app.auth.*}, иначе Spring подставит
+     * {@code APP_AUTH_REQUIRE_EMAIL_VERIFICATION} и случайно включит письма.
+     */
+    @Value("${REQUIRE_EMAIL_VERIFICATION:false}")
     private boolean requireEmailVerification;
     private final Map<String, Deque<Long>> resendAttemptsByKey = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void initDefaultUsers() {
+        log.info("REQUIRE_EMAIL_VERIFICATION active={} (registration email + login mail code)", requireEmailVerification);
         if (!bootstrapDefaultUsers) {
             log.info("Default users bootstrap disabled for current profile");
             return;
