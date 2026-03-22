@@ -1,13 +1,13 @@
 package com.agroanalytics.auth.service;
 
+import com.agroanalytics.auth.crypto.JwtHmacSha256Key;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,9 +22,13 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @PostConstruct
+    void validateJwtSecret() {
+        JwtHmacSha256Key.fromEnvSecret(secret);
+    }
+
     private SecretKey getSigningKey() {
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return JwtHmacSha256Key.fromEnvSecret(secret);
     }
 
     public String generateToken(String username, Map<String, Object> extraClaims) {

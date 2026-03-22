@@ -1,9 +1,9 @@
 package com.agroanalytics.gateway.filter;
 
+import com.agroanalytics.gateway.crypto.JwtHmacSha256Key;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -102,7 +102,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     private Claims parseToken(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = JwtHmacSha256Key.fromEnvSecret(jwtSecret);
         return Jwts.parser()
                 .verifyWith(key)
                 .build()

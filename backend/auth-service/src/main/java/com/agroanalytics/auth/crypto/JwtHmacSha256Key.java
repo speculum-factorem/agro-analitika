@@ -1,0 +1,33 @@
+package com.agroanalytics.auth.crypto;
+
+import io.jsonwebtoken.security.Keys;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+/**
+ * Единая логика ключа HS256 для auth-service и api-gateway (одинаковый {@code JWT_SECRET} в Docker).
+ * JJWT 0.12+ требует ≥256 бит — иначе {@code WeakKeyException} и HTTP 500 на {@code /api/auth/login}.
+ */
+public final class JwtHmacSha256Key {
+
+    private JwtHmacSha256Key() {
+    }
+
+    public static SecretKey fromEnvSecret(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalArgumentException("jwt.secret must not be blank");
+        }
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            try {
+                keyBytes = MessageDigest.getInstance("SHA-256").digest(keyBytes);
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+}
