@@ -14,6 +14,25 @@ type LoginChallengeResponse = {
   message: string
 }
 
+type LoginOutcomeRaw = {
+  loginCodeRequired: boolean
+  challenge?: LoginChallengeResponse | null
+  session?: AuthResponse | null
+}
+
+export type LoginApiResult =
+  | {
+      loginCodeRequired: true
+      requestId: string
+      message: string
+      expiresInSeconds: number
+    }
+  | {
+      loginCodeRequired: false
+      user: User
+      tokens: AuthTokens
+    }
+
 type EmailCodeResponse = {
   message: string
   expiresInSeconds: number
@@ -46,9 +65,22 @@ const mapAuthResponse = (data: AuthResponse): { user: User; tokens: AuthTokens }
 })
 
 export const authApi = {
-  async login(dto: LoginDto): Promise<LoginChallengeResponse> {
-    const { data } = await apiClient.post<LoginChallengeResponse>('/auth/login', dto)
-    return data
+  async login(dto: LoginDto): Promise<LoginApiResult> {
+    const { data } = await apiClient.post<LoginOutcomeRaw>('/auth/login', dto)
+    if (data.loginCodeRequired === false && data.session) {
+      const mapped = mapAuthResponse(data.session)
+      return { loginCodeRequired: false, user: mapped.user, tokens: mapped.tokens }
+    }
+    const ch = data.challenge
+    if (!ch) {
+      throw new Error('Unexpected login response')
+    }
+    return {
+      loginCodeRequired: true,
+      requestId: ch.requestId,
+      message: ch.message,
+      expiresInSeconds: ch.expiresInSeconds,
+    }
   },
 
   async verifyLoginCode(requestId: string, code: string): Promise<{ user: User; tokens: AuthTokens }> {

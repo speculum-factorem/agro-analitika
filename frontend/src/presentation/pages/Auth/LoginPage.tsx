@@ -56,6 +56,10 @@ const LoginPage: React.FC = () => {
     dispatch(clearError())
     const result = await dispatch(login({ username: normalizedUsername, password }))
     if (login.fulfilled.match(result)) {
+      if (!result.payload.loginCodeRequired) {
+        navigate('/app', { replace: true })
+        return
+      }
       setCodeError('')
       setCodeModalOpen(true)
     }

@@ -5,6 +5,7 @@ import com.agroanalytics.auth.dto.ForgotPasswordRequest;
 import com.agroanalytics.auth.dto.LoginRequest;
 import com.agroanalytics.auth.dto.LoginResponse;
 import com.agroanalytics.auth.dto.LoginChallengeResponse;
+import com.agroanalytics.auth.dto.LoginOutcome;
 import com.agroanalytics.auth.dto.RefreshTokenRequest;
 import com.agroanalytics.auth.dto.ResendEmailCodeRequest;
 import com.agroanalytics.auth.dto.ResendLoginCodeRequest;
@@ -40,12 +41,11 @@ public class AuthController {
     private final AuthService authService;
     private final RegistrationRateLimiter registrationRateLimiter;
 
-    @Operation(summary = "Вход", description = "Авторизация по логину и паролю")
-    @ApiResponse(responseCode = "200", description = "Успешный вход")
+    @Operation(summary = "Вход", description = "По логину и паролю: либо challenge с кодом на email, либо сразу JWT (см. loginCodeRequired)")
+    @ApiResponse(responseCode = "200", description = "Успешный шаг входа")
     @PostMapping("/login")
-    public ResponseEntity<LoginChallengeResponse> login(@Valid @RequestBody LoginRequest request) {
-        LoginChallengeResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<LoginOutcome> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 
     @Operation(summary = "Подтверждение кода входа", description = "Проверка 6-значного кода из email и выдача JWT")

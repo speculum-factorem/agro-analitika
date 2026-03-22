@@ -3,6 +3,7 @@ package com.agroanalytics.auth.service;
 import com.agroanalytics.auth.dto.LoginRequest;
 import com.agroanalytics.auth.dto.LoginResponse;
 import com.agroanalytics.auth.dto.LoginChallengeResponse;
+import com.agroanalytics.auth.dto.LoginOutcome;
 import com.agroanalytics.auth.dto.RefreshTokenRequest;
 import com.agroanalytics.auth.dto.RegisterOutcome;
 import com.agroanalytics.auth.dto.RegisterRequest;
@@ -134,7 +135,7 @@ public class AuthService {
         }
     }
 
-    public LoginChallengeResponse login(LoginRequest request) {
+    public LoginOutcome login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
@@ -148,8 +149,17 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email is not verified");
         }
 
-        LoginVerificationCode challenge = createAndSendLoginCode(user);
-        return buildLoginChallengeResponse(challenge);
+        if (requireEmailVerification) {
+            LoginVerificationCode challenge = createAndSendLoginCode(user);
+            return LoginOutcome.builder()
+                    .loginCodeRequired(true)
+                    .challenge(buildLoginChallengeResponse(challenge))
+                    .build();
+        }
+        return LoginOutcome.builder()
+                .loginCodeRequired(false)
+                .session(createLoginResponse(user))
+                .build();
     }
 
     public LoginResponse verifyLoginCode(VerifyLoginCodeRequest request) {

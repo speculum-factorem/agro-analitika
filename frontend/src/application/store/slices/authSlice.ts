@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { User, LoginDto, RegisterDto, AuthTokens } from '@domain/entities/User'
-import { authApi, type RegisterApiResult } from '@infrastructure/api/AuthApi'
+import { authApi, type LoginApiResult, type RegisterApiResult } from '@infrastructure/api/AuthApi'
 
 interface AuthState {
   user: User | null
@@ -163,11 +163,23 @@ const authSlice = createSlice({
         state.error = null
         state.registerSuccess = null
       })
-      .addCase(login.fulfilled, (state, action: PayloadAction<{ requestId: string; message: string; expiresInSeconds: number }>) => {
+      .addCase(login.fulfilled, (state, action: PayloadAction<LoginApiResult>) => {
         state.loading = false
-        state.loginRequestId = action.payload.requestId
-        state.loginChallengeMessage = action.payload.message
-        state.loginChallengeExpiresInSeconds = action.payload.expiresInSeconds
+        const p = action.payload
+        if (!p.loginCodeRequired) {
+          state.user = p.user
+          state.tokens = p.tokens
+          state.isAuthenticated = true
+          state.loginRequestId = null
+          state.loginChallengeMessage = null
+          state.loginChallengeExpiresInSeconds = null
+          localStorage.setItem('user', JSON.stringify(p.user))
+          localStorage.setItem('tokens', JSON.stringify(p.tokens))
+          return
+        }
+        state.loginRequestId = p.requestId
+        state.loginChallengeMessage = p.message
+        state.loginChallengeExpiresInSeconds = p.expiresInSeconds
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false

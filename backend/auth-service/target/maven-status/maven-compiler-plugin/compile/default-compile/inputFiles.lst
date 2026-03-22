@@ -33,6 +33,7 @@
 /Users/maxim/Desktop/a/hackOff2/techno-demo/backend/auth-service/src/main/java/com/agroanalytics/auth/model/OrganizationInviteCode.java
 /Users/maxim/Desktop/a/hackOff2/techno-demo/backend/auth-service/src/main/java/com/agroanalytics/auth/model/LoginVerificationCode.java
 /Users/maxim/Desktop/a/hackOff2/techno-demo/backend/auth-service/src/main/java/com/agroanalytics/auth/dto/RegisterOutcome.java
+/Users/maxim/Desktop/a/hackOff2/techno-demo/backend/auth-service/src/main/java/com/agroanalytics/auth/dto/LoginOutcome.java
 /Users/maxim/Desktop/a/hackOff2/techno-demo/backend/auth-service/src/main/java/com/agroanalytics/auth/dto/ChangePasswordRequest.java
 /Users/maxim/Desktop/a/hackOff2/techno-demo/backend/auth-service/src/main/java/com/agroanalytics/auth/dto/ResetPasswordRequest.java
 /Users/maxim/Desktop/a/hackOff2/techno-demo/backend/auth-service/src/main/java/com/agroanalytics/auth/util/AppRoleMapping.java

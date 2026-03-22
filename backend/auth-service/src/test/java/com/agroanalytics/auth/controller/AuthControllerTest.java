@@ -3,6 +3,7 @@ package com.agroanalytics.auth.controller;
 import com.agroanalytics.auth.config.RestExceptionHandler;
 import com.agroanalytics.auth.dto.LoginRequest;
 import com.agroanalytics.auth.dto.LoginChallengeResponse;
+import com.agroanalytics.auth.dto.LoginOutcome;
 import com.agroanalytics.auth.dto.RegisterOutcome;
 import com.agroanalytics.auth.dto.RegisterRequest;
 import com.agroanalytics.auth.model.User;
@@ -52,13 +53,17 @@ class AuthControllerTest {
                 .message("Код для входа отправлен на email")
                 .build();
 
-        when(authService.login(any(LoginRequest.class))).thenReturn(response);
+        when(authService.login(any(LoginRequest.class))).thenReturn(LoginOutcome.builder()
+                .loginCodeRequired(true)
+                .challenge(response)
+                .build());
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.requestId").value("request-123"));
+                .andExpect(jsonPath("$.loginCodeRequired").value(true))
+                .andExpect(jsonPath("$.challenge.requestId").value("request-123"));
     }
 
     @Test

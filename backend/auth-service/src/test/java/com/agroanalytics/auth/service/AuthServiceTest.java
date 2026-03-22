@@ -1,8 +1,7 @@
 package com.agroanalytics.auth.service;
 
 import com.agroanalytics.auth.dto.LoginRequest;
-import com.agroanalytics.auth.dto.LoginChallengeResponse;
-import com.agroanalytics.auth.dto.RegisterRequest;
+import com.agroanalytics.auth.dto.LoginOutcome;
 import com.agroanalytics.auth.model.User;
 import com.agroanalytics.auth.repository.LoginVerificationCodeRepository;
 import com.agroanalytics.auth.repository.OrganizationInviteCodeRepository;
@@ -54,6 +53,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(authService, "bootstrapDefaultUsers", false);
+        ReflectionTestUtils.setField(authService, "requireEmailVerification", true);
     }
 
     @Test
@@ -69,9 +69,10 @@ class AuthServiceTest {
         when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("admin", user.getPasswordHash())).thenReturn(true);
         LoginRequest request = new LoginRequest("admin", "admin");
-        LoginChallengeResponse response = authService.login(request);
+        LoginOutcome outcome = authService.login(request);
 
-        assertThat(response.getRequestId()).isNotBlank();
+        assertThat(outcome.isLoginCodeRequired()).isTrue();
+        assertThat(outcome.getChallenge().getRequestId()).isNotBlank();
     }
 
     @Test
