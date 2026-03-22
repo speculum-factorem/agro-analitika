@@ -27,7 +27,8 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     hostname: kafka
     ports:
-      - "9092:9092"
+      # Внутри сети compose брокер доступен как kafka:9092. С хоста — localhost:29092 (PLAINTEXT_HOST).
+      # Проброс 9092 на хост убран: часто занят локальным Kafka/другим ПО (bind failed: port already allocated).
       - "29092:29092"
     environment:
       KAFKA_NODE_ID: 1
