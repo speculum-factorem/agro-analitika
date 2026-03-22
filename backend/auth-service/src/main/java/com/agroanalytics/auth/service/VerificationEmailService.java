@@ -25,6 +25,10 @@ public class VerificationEmailService {
     @Value("${spring.mail.username:}")
     private String mailFrom;
 
+    /** Пустая строка из docker-compose (MAIL_HOST:) всё равно создаёт бин JavaMailSender → setFrom/send падают с 500. */
+    @Value("${spring.mail.host:}")
+    private String mailHost;
+
     // ─── Verification email ──────────────────────────────────────────────────
 
     public void sendVerificationEmail(String toEmail, String token, String verificationCode) {
@@ -102,13 +106,21 @@ public class VerificationEmailService {
     }
 
     public boolean isMailConfigured() {
-        return mailSender.isPresent();
+        return mailSender.isPresent()
+                && mailHost != null && !mailHost.isBlank()
+                && mailFrom != null && !mailFrom.isBlank();
     }
 
     // ─── Send helper ─────────────────────────────────────────────────────────
 
     private void sendHtml(String to, String subject, String html) {
-        if (mailSender.isEmpty()) return;
+        if (mailSender.isEmpty()) {
+            return;
+        }
+        if (mailHost == null || mailHost.isBlank() || mailFrom == null || mailFrom.isBlank()) {
+            log.debug("Skip SMTP send (spring.mail.host or username not set): to={}", to);
+            return;
+        }
         try {
             MimeMessage message = mailSender.get().createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -118,6 +130,8 @@ public class VerificationEmailService {
             helper.setText(html, true);
             mailSender.get().send(message);
         } catch (MailException | jakarta.mail.MessagingException ex) {
+            log.warn("Failed to send email to {}: {}", to, ex.getMessage());
+        } catch (RuntimeException ex) {
             log.warn("Failed to send email to {}: {}", to, ex.getMessage());
         }
     }

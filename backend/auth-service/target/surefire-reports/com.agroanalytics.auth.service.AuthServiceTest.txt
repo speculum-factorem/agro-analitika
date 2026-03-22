@@ -1,11 +1,11 @@
 -------------------------------------------------------------------------------
 Test set: com.agroanalytics.auth.service.AuthServiceTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 0.013 s <<< FAILURE! -- in com.agroanalytics.auth.service.AuthServiceTest
-com.agroanalytics.auth.service.AuthServiceTest.login_validCredentials_returnsChallenge -- Time elapsed: 0.006 s <<< ERROR!
+Tests run: 3, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 0.014 s <<< FAILURE! -- in com.agroanalytics.auth.service.AuthServiceTest
+com.agroanalytics.auth.service.AuthServiceTest.login_validCredentials_returnsChallenge -- Time elapsed: 0.007 s <<< ERROR!
 java.lang.IllegalStateException: Could not initialize plugin: interface org.mockito.plugins.MockMaker (alternate: null)
 	at org.mockito.internal.configuration.plugins.PluginLoader$1.invoke(PluginLoader.java:84)
-	at jdk.proxy2/jdk.proxy2.$Proxy84.isTypeMockable(Unknown Source)
+	at jdk.proxy2/jdk.proxy2.$Proxy85.isTypeMockable(Unknown Source)
 	at org.mockito.internal.util.MockUtil.typeMockabilityOf(MockUtil.java:78)
 	at org.mockito.internal.util.MockCreationValidator.validateType(MockCreationValidator.java:22)
 	at org.mockito.internal.creation.MockSettingsImpl.validatedSettings(MockSettingsImpl.java:274)
@@ -109,7 +109,7 @@ Caused by: java.lang.IllegalStateException: Could not self-attach to current VM 
 com.agroanalytics.auth.service.AuthServiceTest.login_wrongPassword_throwsBadCredentials -- Time elapsed: 0.001 s <<< ERROR!
 java.lang.IllegalStateException: Could not initialize plugin: interface org.mockito.plugins.MockMaker (alternate: null)
 	at org.mockito.internal.configuration.plugins.PluginLoader$1.invoke(PluginLoader.java:84)
-	at jdk.proxy2/jdk.proxy2.$Proxy84.isTypeMockable(Unknown Source)
+	at jdk.proxy2/jdk.proxy2.$Proxy85.isTypeMockable(Unknown Source)
 	at org.mockito.internal.util.MockUtil.typeMockabilityOf(MockUtil.java:78)
 	at org.mockito.internal.util.MockCreationValidator.validateType(MockCreationValidator.java:22)
 	at org.mockito.internal.creation.MockSettingsImpl.validatedSettings(MockSettingsImpl.java:274)
@@ -210,10 +210,10 @@ Caused by: java.lang.IllegalStateException: Could not self-attach to current VM 
 	at org.mockito.internal.creation.bytebuddy.InlineDelegateByteBuddyMockMaker.<clinit>(InlineDelegateByteBuddyMockMaker.java:133)
 	... 51 more
 
-com.agroanalytics.auth.service.AuthServiceTest.login_userNotFound_throwsBadCredentials -- Time elapsed: 0 s <<< ERROR!
+com.agroanalytics.auth.service.AuthServiceTest.login_userNotFound_throwsBadCredentials -- Time elapsed: 0.001 s <<< ERROR!
 java.lang.IllegalStateException: Could not initialize plugin: interface org.mockito.plugins.MockMaker (alternate: null)
 	at org.mockito.internal.configuration.plugins.PluginLoader$1.invoke(PluginLoader.java:84)
-	at jdk.proxy2/jdk.proxy2.$Proxy84.isTypeMockable(Unknown Source)
+	at jdk.proxy2/jdk.proxy2.$Proxy85.isTypeMockable(Unknown Source)
 	at org.mockito.internal.util.MockUtil.typeMockabilityOf(MockUtil.java:78)
 	at org.mockito.internal.util.MockCreationValidator.validateType(MockCreationValidator.java:22)
 	at org.mockito.internal.creation.MockSettingsImpl.validatedSettings(MockSettingsImpl.java:274)
