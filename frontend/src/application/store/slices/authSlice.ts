@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { User, LoginDto, RegisterDto, AuthTokens } from '@domain/entities/User'
-import { authApi } from '@infrastructure/api/AuthApi'
+import { authApi, type RegisterApiResult } from '@infrastructure/api/AuthApi'
 
 interface AuthState {
   user: User | null
@@ -220,9 +220,17 @@ const authSlice = createSlice({
         state.error = null
         state.registerSuccess = null
       })
-      .addCase(register.fulfilled, (state, action: PayloadAction<{ message: string }>) => {
+      .addCase(register.fulfilled, (state, action: PayloadAction<RegisterApiResult>) => {
         state.loading = false
         state.registerSuccess = action.payload.message
+        const p = action.payload
+        if (p.tokens && p.user) {
+          state.user = p.user
+          state.tokens = p.tokens
+          state.isAuthenticated = true
+          localStorage.setItem('user', JSON.stringify(p.user))
+          localStorage.setItem('tokens', JSON.stringify(p.tokens))
+        }
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false

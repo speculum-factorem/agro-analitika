@@ -4,6 +4,7 @@ import com.agroanalytics.auth.dto.LoginRequest;
 import com.agroanalytics.auth.dto.LoginResponse;
 import com.agroanalytics.auth.dto.LoginChallengeResponse;
 import com.agroanalytics.auth.dto.RefreshTokenRequest;
+import com.agroanalytics.auth.dto.RegisterOutcome;
 import com.agroanalytics.auth.dto.RegisterRequest;
 import com.agroanalytics.auth.dto.VerifyLoginCodeRequest;
 import com.agroanalytics.auth.dto.ChangePasswordRequest;
@@ -86,6 +87,8 @@ public class AuthService {
     /** false = один и тот же invite можно использовать многократно (удобно для демо/VPS). */
     @Value("${app.auth.invite-single-use:false}")
     private boolean inviteSingleUse;
+    @Value("${app.auth.require-email-verification:false}")
+    private boolean requireEmailVerification;
     private final Map<String, Deque<Long>> resendAttemptsByKey = new ConcurrentHashMap<>();
 
     @PostConstruct
@@ -141,7 +144,7 @@ public class AuthService {
         if (!user.isActive()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Учётная запись заблокирована");
         }
-        if (!user.isEmailVerified()) {
+        if (requireEmailVerification && !user.isEmailVerified()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email is not verified");
         }
 
@@ -233,7 +236,7 @@ public class AuthService {
                 .build();
     }
 
-    public long register(RegisterRequest request) {
+    public RegisterOutcome register(RegisterRequest request) {
         String normalizedUsername = request.getUsername().trim();
         String normalizedEmail = request.getEmail().trim().toLowerCase();
         String normalizedFullName = request.getFullName().trim();
@@ -254,6 +257,7 @@ public class AuthService {
         Long organizationId = invite != null ? invite.getOrganizationId() : null;
         User.Role registrationRole = resolveRegistrationRole(invite);
 
+        boolean verifiedImmediately = !requireEmailVerification;
         User user = User.builder()
                 .username(normalizedUsername)
                 .email(normalizedEmail)
@@ -261,14 +265,27 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(registrationRole)
                 .organizationId(organizationId)
-                .emailVerified(false)
+                .emailVerified(verifiedImmediately)
                 .build();
 
         userRepository.save(user);
         user = assignPersonalOrganizationIfMissing(user);
-        createAndSendVerificationToken(user);
+        if (requireEmailVerification) {
+            createAndSendVerificationToken(user);
+        }
         consumeInviteIfNeeded(invite);
-        return verificationTtlMinutes * 60;
+        if (verifiedImmediately) {
+            return RegisterOutcome.builder()
+                    .expiresInSeconds(0)
+                    .emailVerificationRequired(false)
+                    .session(createLoginResponse(user))
+                    .build();
+        }
+        return RegisterOutcome.builder()
+                .expiresInSeconds(verificationTtlMinutes * 60)
+                .emailVerificationRequired(true)
+                .session(null)
+                .build();
     }
 
     private User.Role resolveRegistrationRole(OrganizationInviteCode invite) {
@@ -429,7 +446,7 @@ public class AuthService {
         if (!jwtService.isTokenValid(refreshToken, username)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired or invalid");
         }
-        if (!user.isEmailVerified()) {
+        if (requireEmailVerification && !user.isEmailVerified()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email is not verified");
         }
         if (!user.isActive()) {

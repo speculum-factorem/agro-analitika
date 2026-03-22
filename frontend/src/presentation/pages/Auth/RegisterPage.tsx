@@ -6,7 +6,7 @@ import Button from '@presentation/components/common/Button/Button'
 import Input from '@presentation/components/common/Input/Input'
 import Alert from '@presentation/components/common/Alert/Alert'
 import PrivacyPolicyModal from '@presentation/components/legal/PrivacyPolicyModal'
-import { authApi } from '@infrastructure/api/AuthApi'
+import { authApi, type RegisterApiResult } from '@infrastructure/api/AuthApi'
 import EmailCodeModal from './EmailCodeModal'
 import styles from './AuthPage.module.scss'
 
@@ -129,7 +129,11 @@ const RegisterPage: React.FC = () => {
       personalDataConsent: true,
     }))
     if (register.fulfilled.match(result)) {
-      const payload = result.payload as { expiresInSeconds?: number; emailConfigured?: boolean }
+      const payload = result.payload as RegisterApiResult
+      if (payload.tokens && payload.user) {
+        navigate('/app', { replace: true })
+        return
+      }
       setCodeError('')
       setResendError('')
       setCodeExpiresInSeconds(payload.expiresInSeconds ?? null)

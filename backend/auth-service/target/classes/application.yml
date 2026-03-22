@@ -69,6 +69,8 @@ app:
       window-seconds: ${REGISTER_RATE_LIMIT_WINDOW_SECONDS:900}
     # true — invite одноразовый; false (по умолчанию) — один код для многих регистраций (демо)
     invite-single-use: ${INVITE_SINGLE_USE:false}
+    # false — регистрация без письма; вход/refresh не требуют email_verified (удобно для демо)
+    require-email-verification: ${REQUIRE_EMAIL_VERIFICATION:false}
 ---
 spring:
   config:

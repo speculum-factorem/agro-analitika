@@ -8,6 +8,7 @@ import com.agroanalytics.auth.dto.LoginChallengeResponse;
 import com.agroanalytics.auth.dto.RefreshTokenRequest;
 import com.agroanalytics.auth.dto.ResendEmailCodeRequest;
 import com.agroanalytics.auth.dto.ResendLoginCodeRequest;
+import com.agroanalytics.auth.dto.RegisterOutcome;
 import com.agroanalytics.auth.dto.RegisterRequest;
 import com.agroanalytics.auth.dto.ResetPasswordRequest;
 import com.agroanalytics.auth.dto.VerifyEmailCodeRequest;
@@ -26,6 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -67,12 +69,22 @@ public class AuthController {
             HttpServletRequest httpRequest
     ) {
         registrationRateLimiter.checkLimit(clientIp(httpRequest));
-        long expiresInSeconds = authService.register(request);
-        return ResponseEntity.status(201).body(Map.of(
-                "message", "Регистрация успешна. На почту отправлен код подтверждения (6 цифр) и ссылка.",
-                "expiresInSeconds", expiresInSeconds,
-                "emailConfigured", authService.isMailConfigured()
-        ));
+        RegisterOutcome outcome = authService.register(request);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", outcome.isEmailVerificationRequired()
+                ? "Регистрация успешна. На почту отправлен код подтверждения (6 цифр) и ссылка."
+                : "Регистрация успешна. Подтверждение email отключено — можно пользоваться аккаунтом.");
+        body.put("expiresInSeconds", outcome.getExpiresInSeconds());
+        body.put("emailConfigured", authService.isMailConfigured());
+        body.put("emailVerificationRequired", outcome.isEmailVerificationRequired());
+        LoginResponse session = outcome.getSession();
+        if (session != null) {
+            body.put("accessToken", session.getAccessToken());
+            body.put("refreshToken", session.getRefreshToken());
+            body.put("expiresIn", session.getExpiresIn());
+            body.put("user", session.getUser());
+        }
+        return ResponseEntity.status(201).body(body);
     }
 
     @Operation(summary = "Подтверждение email", description = "Подтверждение email по токену из письма")

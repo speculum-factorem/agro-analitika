@@ -3,6 +3,7 @@ package com.agroanalytics.auth.controller;
 import com.agroanalytics.auth.config.RestExceptionHandler;
 import com.agroanalytics.auth.dto.LoginRequest;
 import com.agroanalytics.auth.dto.LoginChallengeResponse;
+import com.agroanalytics.auth.dto.RegisterOutcome;
 import com.agroanalytics.auth.dto.RegisterRequest;
 import com.agroanalytics.auth.model.User;
 import com.agroanalytics.auth.service.AuthService;
@@ -83,7 +84,11 @@ class AuthControllerTest {
         request.setPersonalDataConsent(true);
 
         doNothing().when(registrationRateLimiter).checkLimit(any());
-        when(authService.register(any(RegisterRequest.class))).thenReturn(86400L);
+        when(authService.register(any(RegisterRequest.class))).thenReturn(
+                RegisterOutcome.builder()
+                        .expiresInSeconds(86400)
+                        .emailVerificationRequired(true)
+                        .build());
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

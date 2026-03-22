@@ -18,6 +18,20 @@ type EmailCodeResponse = {
   message: string
   expiresInSeconds: number
   emailConfigured?: boolean
+  emailVerificationRequired?: boolean
+  accessToken?: string
+  refreshToken?: string
+  expiresIn?: number
+  user?: { id: number; username: string; email: string; fullName: string; role: string }
+}
+
+export type RegisterApiResult = {
+  message: string
+  expiresInSeconds: number
+  emailConfigured?: boolean
+  emailVerificationRequired?: boolean
+  user?: User
+  tokens?: AuthTokens
 }
 
 const mapAuthResponse = (data: AuthResponse): { user: User; tokens: AuthTokens } => ({
@@ -50,7 +64,7 @@ export const authApi = {
     return data
   },
 
-  async register(dto: RegisterDto): Promise<EmailCodeResponse> {
+  async register(dto: RegisterDto): Promise<RegisterApiResult> {
     const orgRaw = dto.organizationId != null && dto.organizationId !== ''
       ? Number(dto.organizationId)
       : undefined
@@ -68,7 +82,34 @@ export const authApi = {
       if (orgNum !== undefined) body.organizationId = orgNum
     }
     const { data } = await apiClient.post<EmailCodeResponse>('/auth/register', body)
-    return data
+    if (
+      data.emailVerificationRequired === false
+      && data.accessToken
+      && data.refreshToken
+      && data.user
+      && data.expiresIn != null
+    ) {
+      const mapped = mapAuthResponse({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
+        user: data.user,
+      })
+      return {
+        message: data.message,
+        expiresInSeconds: data.expiresInSeconds,
+        emailConfigured: data.emailConfigured,
+        emailVerificationRequired: data.emailVerificationRequired,
+        user: mapped.user,
+        tokens: mapped.tokens,
+      }
+    }
+    return {
+      message: data.message,
+      expiresInSeconds: data.expiresInSeconds,
+      emailConfigured: data.emailConfigured,
+      emailVerificationRequired: data.emailVerificationRequired,
+    }
   },
 
   async verifyEmail(token: string): Promise<{ user: User; tokens: AuthTokens }> {
