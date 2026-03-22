@@ -29,15 +29,15 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     hostname: kafka
     ports:
-      # Внутри сети compose брокер доступен как kafka:9092. С хоста — localhost:29092 (PLAINTEXT_HOST).
-      # Проброс 9092 на хост убран: часто занят локальным Kafka/другим ПО (bind failed: port already allocated).
-      - "29092:29092"
+      # Внутри сети compose: kafka:9092. С хоста — PLAINTEXT_HOST на localhost:${KAFKA_HOST_PUBLISH_PORT:-39092}
+      # (29092 часто занят другим Kafka на машине)
+      - "${KAFKA_HOST_PUBLISH_PORT:-39092}:29092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PUBLISH_PORT:-39092}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
